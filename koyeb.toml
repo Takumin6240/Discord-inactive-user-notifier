@@ -1,0 +1,5 @@
+[build]
+buildpack = "nodejs"
+
+[deploy]
+type = "web" 

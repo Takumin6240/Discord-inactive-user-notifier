@@ -1,0 +1,41 @@
+{
+  "name": "discord-inactive-user-notifier",
+  "version": "1.0.0",
+  "description": "Discord非アクティブユーザー通知ボット - Koyeb環境向け",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "type-check": "tsc --noEmit",
+    "postinstall": "npm run build"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "inactive",
+    "monitoring",
+    "koyeb"
+  ],
+  "author": "Takumin6240",
+  "license": "MIT",
+  "dependencies": {
+    "@hono/node-server": "^1.14.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^17.0.0",
+    "hono": "^4.0.0",
+    "node-cron": "^3.0.3",
+    "typescript": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/node-cron": "^3.0.11",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0"
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": ">=8.0.0"
+  }
+}

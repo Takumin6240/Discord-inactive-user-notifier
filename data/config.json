@@ -1,0 +1,18 @@
+{
+  "inactiveDays": 3,
+  "enableAutoNotify": true,
+  "notifyTime": "0 20 * * *",
+  "notifyChannel": null,
+  "logChannel": null,
+  "excludeRoles": [],
+  "excludeUsers": [],
+  "maxUsersPerMessage": 20,
+  "monitoringOptions": {
+    "messages": true,
+    "reactions": true,
+    "voiceActivity": true
+  },
+  "koyebConfig": {
+    "keepaliveInterval": 5
+  }
+} 
