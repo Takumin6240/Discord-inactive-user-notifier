@@ -220,14 +220,14 @@ async function main(): Promise<void> {
     console.log('💡 解決方法:');
     console.log('1. 環境変数でDISCORD_TOKENを設定してください');
     console.log('2. Discord Developer Portalでトークンを確認してください');
-    process.exit(1);
+    throw new Error('DISCORD_TOKEN is not set');
   }
 
   if (DISCORD_TOKEN === 'your_discord_bot_token_here') {
     logMessage('❌ DISCORD_TOKENがデフォルト値のままです', 'ERROR');
     console.log('❌ エラー: DISCORD_TOKENがデフォルト値のままです');
     console.log('💡 実際のDiscord Botトークンに変更してください');
-    process.exit(1);
+    throw new Error('DISCORD_TOKEN is default value');
   }
 
   try {
@@ -268,7 +268,7 @@ async function main(): Promise<void> {
       console.log(`❌ 予期しないエラー: ${error}`);
     }
     
-    process.exit(1);
+    throw error;
   }
 }
 
@@ -288,15 +288,22 @@ process.on('SIGTERM', () => {
 // 未処理の例外をキャッチ
 process.on('unhandledRejection', (reason, promise) => {
   logMessage(`Unhandled Rejection at: ${promise}, reason: ${reason}`, 'ERROR');
+  // Koyebでの継続監視のため、プロセスを終了しない
 });
 
 process.on('uncaughtException', (error) => {
   logMessage(`Uncaught Exception: ${error}`, 'ERROR');
-  process.exit(1);
+  // 重要なエラーのため、ログを記録するが継続実行を試みる
+  console.error('Critical error occurred, but continuing for Koyeb monitoring...');
 });
 
 // アプリケーション開始
 main().catch((error) => {
   logMessage(`Application startup error: ${error}`, 'ERROR');
-  process.exit(1);
+  console.error('Application failed to start:', error);
+  // Koyebでの継続監視のため、プロセスを終了せず再試行の機会を残す
+  setTimeout(() => {
+    console.log('Attempting to restart application...');
+    main().catch(console.error);
+  }, 30000); // 30秒後に再試行
 }); 
