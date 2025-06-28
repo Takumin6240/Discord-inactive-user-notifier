@@ -4,7 +4,8 @@ import {
   Events, 
   REST, 
   Routes,
-  ActivityType
+  ActivityType,
+  MessageFlags
 } from 'discord.js';
 import { serve } from '@hono/node-server';
 
@@ -125,16 +126,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await handleWhitelist(interaction);
         break;
       default:
-        await interaction.reply({ content: '❌ 未知のコマンドです', ephemeral: true });
+        await interaction.reply({ content: '❌ 未知のコマンドです', flags: MessageFlags.Ephemeral });
     }
   } catch (error) {
     logMessage(`Command execution error: ${error}`, 'ERROR');
     
     try {
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+        await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
       } else {
-        await interaction.reply({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+                  await interaction.reply({ content: '❌ コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
       }
     } catch (followUpError) {
       logMessage(`Failed to send error message: ${followUpError}`, 'ERROR');
@@ -278,13 +279,13 @@ async function main(): Promise<void> {
 
 // プロセス終了時の処理
 process.on('SIGINT', () => {
-  logMessage('Bot is shutting down...');
+  logMessage('ボットがシャットダウンしています（SIGINT受信）...');
   client.destroy();
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  logMessage('Bot is shutting down...');
+  logMessage('ボットがシャットダウンしています（SIGTERM受信）...');
   client.destroy();
   process.exit(0);
 });

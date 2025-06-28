@@ -4,7 +4,8 @@ import {
   PermissionFlagsBits,
   EmbedBuilder,
   Colors,
-  TextChannel
+  TextChannel,
+  MessageFlags
 } from 'discord.js';
 import { loadConfig, saveConfig } from '../config.js';
 import { getInactiveUsers, resetActivityData } from './activity.js';
@@ -103,11 +104,11 @@ export const commands = [
 // bot-status コマンドの処理
 export async function handleBotStatus(interaction: ChatInputCommandInteraction): Promise<void> {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', ephemeral: true });
+    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const config = loadConfig();
@@ -158,43 +159,43 @@ export async function handleBotStatus(interaction: ChatInputCommandInteraction):
     
   } catch (error) {
     logMessage(`bot-status command error: ${error}`, 'ERROR');
-    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
   }
 }
 
 // check-inactive コマンドの処理
 export async function handleCheckInactive(interaction: ChatInputCommandInteraction): Promise<void> {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', ephemeral: true });
+    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     if (!interaction.guild) {
-      await interaction.followUp({ content: '❌ このコマンドはサーバー内でのみ実行可能です', ephemeral: true });
+      await interaction.followUp({ content: '❌ このコマンドはサーバー内でのみ実行可能です', flags: MessageFlags.Ephemeral });
       return;
     }
 
     const inactiveUsers = await getInactiveUsers(interaction.guild);
     await sendNotification(interaction.user, interaction.guild, inactiveUsers);
-    await interaction.followUp({ content: '✅ 通知を送信しました', ephemeral: true });
+    await interaction.followUp({ content: '✅ 通知を送信しました', flags: MessageFlags.Ephemeral });
     
   } catch (error) {
     logMessage(`check-inactive command error: ${error}`, 'ERROR');
-    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
   }
 }
 
 // set-config コマンドの処理
 export async function handleSetConfig(interaction: ChatInputCommandInteraction): Promise<void> {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', ephemeral: true });
+    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const config = loadConfig();
@@ -231,22 +232,22 @@ export async function handleSetConfig(interaction: ChatInputCommandInteraction):
       `✅ 設定を更新しました:\n${updates.join('\n')}` : 
       '❌ 更新する設定が指定されていません';
 
-    await interaction.followUp({ content: response, ephemeral: true });
+    await interaction.followUp({ content: response, flags: MessageFlags.Ephemeral });
     
   } catch (error) {
     logMessage(`set-config command error: ${error}`, 'ERROR');
-    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
   }
 }
 
 // monitoring-settings コマンドの処理
 export async function handleMonitoringSettings(interaction: ChatInputCommandInteraction): Promise<void> {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', ephemeral: true });
+    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const config = loadConfig();
@@ -277,42 +278,42 @@ export async function handleMonitoringSettings(interaction: ChatInputCommandInte
       `✅ 監視設定を更新しました:\n${updates.join('\n')}` : 
       '❌ 更新する設定が指定されていません';
 
-    await interaction.followUp({ content: response, ephemeral: true });
+    await interaction.followUp({ content: response, flags: MessageFlags.Ephemeral });
     
   } catch (error) {
     logMessage(`monitoring-settings command error: ${error}`, 'ERROR');
-    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
   }
 }
 
 // reset-data コマンドの処理
 export async function handleResetData(interaction: ChatInputCommandInteraction): Promise<void> {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', ephemeral: true });
+    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     resetActivityData();
-    await interaction.followUp({ content: '✅ アクティビティデータを初期化しました', ephemeral: true });
+    await interaction.followUp({ content: '✅ アクティビティデータを初期化しました', flags: MessageFlags.Ephemeral });
     logMessage('Activity data has been reset by admin command');
     
   } catch (error) {
     logMessage(`reset-data command error: ${error}`, 'ERROR');
-    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
   }
 }
 
 // whitelist コマンドの処理
 export async function handleWhitelist(interaction: ChatInputCommandInteraction): Promise<void> {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', ephemeral: true });
+    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const config = loadConfig();
@@ -329,12 +330,12 @@ export async function handleWhitelist(interaction: ChatInputCommandInteraction):
         await handleWhitelistList(interaction, config);
         break;
       default:
-        await interaction.followUp({ content: '❌ 未知のサブコマンドです', ephemeral: true });
+        await interaction.followUp({ content: '❌ 未知のサブコマンドです', flags: MessageFlags.Ephemeral });
     }
     
   } catch (error) {
     logMessage(`whitelist command error: ${error}`, 'ERROR');
-    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
   }
 }
 
@@ -342,14 +343,14 @@ export async function handleWhitelist(interaction: ChatInputCommandInteraction):
 async function handleWhitelistAdd(interaction: ChatInputCommandInteraction, config: any): Promise<void> {
   const user = interaction.options.getUser('user');
   if (!user) {
-    await interaction.followUp({ content: '❌ ユーザーが指定されていません', ephemeral: true });
+    await interaction.followUp({ content: '❌ ユーザーが指定されていません', flags: MessageFlags.Ephemeral });
     return;
   }
 
   if (config.excludeUsers.includes(user.id)) {
     await interaction.followUp({ 
       content: `❌ ${user.username} は既にホワイトリストに登録されています`, 
-      ephemeral: true 
+      flags: MessageFlags.Ephemeral 
     });
     return;
   }
@@ -359,7 +360,7 @@ async function handleWhitelistAdd(interaction: ChatInputCommandInteraction, conf
 
   await interaction.followUp({ 
     content: `✅ ${user.username} をホワイトリストに追加しました\n（非アクティブユーザー対象から除外されます）`, 
-    ephemeral: true 
+    flags: MessageFlags.Ephemeral 
   });
   
   logMessage(`User ${user.username} (${user.id}) added to whitelist by admin`);
@@ -369,7 +370,7 @@ async function handleWhitelistAdd(interaction: ChatInputCommandInteraction, conf
 async function handleWhitelistRemove(interaction: ChatInputCommandInteraction, config: any): Promise<void> {
   const user = interaction.options.getUser('user');
   if (!user) {
-    await interaction.followUp({ content: '❌ ユーザーが指定されていません', ephemeral: true });
+    await interaction.followUp({ content: '❌ ユーザーが指定されていません', flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -377,7 +378,7 @@ async function handleWhitelistRemove(interaction: ChatInputCommandInteraction, c
   if (index === -1) {
     await interaction.followUp({ 
       content: `❌ ${user.username} はホワイトリストに登録されていません`, 
-      ephemeral: true 
+      flags: MessageFlags.Ephemeral 
     });
     return;
   }
@@ -387,7 +388,7 @@ async function handleWhitelistRemove(interaction: ChatInputCommandInteraction, c
 
   await interaction.followUp({ 
     content: `✅ ${user.username} をホワイトリストから削除しました\n（非アクティブユーザー対象に含まれるようになります）`, 
-    ephemeral: true 
+    flags: MessageFlags.Ephemeral 
   });
   
   logMessage(`User ${user.username} (${user.id}) removed from whitelist by admin`);
@@ -398,13 +399,13 @@ async function handleWhitelistList(interaction: ChatInputCommandInteraction, con
   if (config.excludeUsers.length === 0) {
     await interaction.followUp({ 
       content: '📋 ホワイトリストは空です\n現在、除外されているユーザーはいません', 
-      ephemeral: true 
+      flags: MessageFlags.Ephemeral 
     });
     return;
   }
 
   if (!interaction.guild) {
-    await interaction.followUp({ content: '❌ このコマンドはサーバー内でのみ実行可能です', ephemeral: true });
+    await interaction.followUp({ content: '❌ このコマンドはサーバー内でのみ実行可能です', flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -440,5 +441,5 @@ async function handleWhitelistList(interaction: ChatInputCommandInteraction, con
     inline: false
   });
 
-  await interaction.followUp({ embeds: [embed], ephemeral: true });
+  await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 } 

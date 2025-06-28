@@ -23,12 +23,12 @@ async function sendKeepAliveRequest(): Promise<void> {
 // Keep-aliveスケジュールを開始
 export function startKeepAlive(): void {
   if (HEALTH_CHECK_URL) {
-    // 5分ごとにKeep-aliveリクエストを送信
-    cron.schedule('*/5 * * * *', () => {
+    // 3分ごとにKeep-aliveリクエストを送信（UptimeRobot 5分間隔と組み合わせて効果的な監視）
+    cron.schedule('*/3 * * * *', () => {
       sendKeepAliveRequest();
     });
     
-    logMessage('Keep-alive scheduler started (every 5 minutes)');
+    logMessage('Keep-alive scheduler started (every 3 minutes) - UptimeRobot compatible');
   } else {
     logMessage('HEALTH_CHECK_URL not set, Keep-alive disabled', 'WARN');
   }
