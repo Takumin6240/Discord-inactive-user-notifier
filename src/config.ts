@@ -159,8 +159,9 @@ export function loadConfig(): Config {
   }
 
   // 必須環境変数の検証
-  const requiredVars = ['discordToken', 'discordClientId', 'guildId'];
-  const missingVars = requiredVars.filter(key => !config[key as keyof Config]);
+  const missingVars = [];
+  if (!config.discordToken) missingVars.push('DISCORD_TOKEN');
+  // clientIdやguildIdは必須ではないのでチェックしない
   
   if (missingVars.length > 0) {
     throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
