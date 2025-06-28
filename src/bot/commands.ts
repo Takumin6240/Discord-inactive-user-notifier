@@ -71,7 +71,33 @@ export const commands = [
   new SlashCommandBuilder()
     .setName('reset-data')
     .setDescription('アクティビティデータを初期化（注意：元に戻せません）')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+  // whitelist コマンド
+  new SlashCommandBuilder()
+    .setName('whitelist')
+    .setDescription('ホワイトリスト管理（非アクティブ対象から除外）')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('add')
+        .setDescription('ユーザーをホワイトリストに追加')
+        .addUserOption(option =>
+          option.setName('user')
+            .setDescription('ホワイトリストに追加するユーザー')
+            .setRequired(true)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('remove')
+        .setDescription('ユーザーをホワイトリストから削除')
+        .addUserOption(option =>
+          option.setName('user')
+            .setDescription('ホワイトリストから削除するユーザー')
+            .setRequired(true)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('list')
+        .setDescription('現在のホワイトリストを表示'))
 ];
 
 // bot-status コマンドの処理
@@ -119,7 +145,12 @@ export async function handleBotStatus(interaction: ChatInputCommandInteraction):
         {
           name: '👀 監視設定',
           value: monitoringStatus.join('\n'),
-          inline: false
+          inline: true
+        },
+        {
+          name: '📋 ホワイトリスト',
+          value: `除外ユーザー: ${config.excludeUsers.length}名\n除外ロール: ${config.excludeRoles.length}個`,
+          inline: true
         }
       );
 
@@ -272,4 +303,142 @@ export async function handleResetData(interaction: ChatInputCommandInteraction):
     logMessage(`reset-data command error: ${error}`, 'ERROR');
     await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
   }
+}
+
+// whitelist コマンドの処理
+export async function handleWhitelist(interaction: ChatInputCommandInteraction): Promise<void> {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({ content: '❌ このコマンドは管理者のみ実行可能です', ephemeral: true });
+    return;
+  }
+
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
+    const config = loadConfig();
+    const subcommand = interaction.options.getSubcommand();
+
+    switch (subcommand) {
+      case 'add':
+        await handleWhitelistAdd(interaction, config);
+        break;
+      case 'remove':
+        await handleWhitelistRemove(interaction, config);
+        break;
+      case 'list':
+        await handleWhitelistList(interaction, config);
+        break;
+      default:
+        await interaction.followUp({ content: '❌ 未知のサブコマンドです', ephemeral: true });
+    }
+    
+  } catch (error) {
+    logMessage(`whitelist command error: ${error}`, 'ERROR');
+    await interaction.followUp({ content: '❌ コマンド実行中にエラーが発生しました', ephemeral: true });
+  }
+}
+
+// ホワイトリストにユーザーを追加
+async function handleWhitelistAdd(interaction: ChatInputCommandInteraction, config: any): Promise<void> {
+  const user = interaction.options.getUser('user');
+  if (!user) {
+    await interaction.followUp({ content: '❌ ユーザーが指定されていません', ephemeral: true });
+    return;
+  }
+
+  if (config.excludeUsers.includes(user.id)) {
+    await interaction.followUp({ 
+      content: `❌ ${user.username} は既にホワイトリストに登録されています`, 
+      ephemeral: true 
+    });
+    return;
+  }
+
+  config.excludeUsers.push(user.id);
+  saveConfig(config);
+
+  await interaction.followUp({ 
+    content: `✅ ${user.username} をホワイトリストに追加しました\n（非アクティブユーザー対象から除外されます）`, 
+    ephemeral: true 
+  });
+  
+  logMessage(`User ${user.username} (${user.id}) added to whitelist by admin`);
+}
+
+// ホワイトリストからユーザーを削除
+async function handleWhitelistRemove(interaction: ChatInputCommandInteraction, config: any): Promise<void> {
+  const user = interaction.options.getUser('user');
+  if (!user) {
+    await interaction.followUp({ content: '❌ ユーザーが指定されていません', ephemeral: true });
+    return;
+  }
+
+  const index = config.excludeUsers.indexOf(user.id);
+  if (index === -1) {
+    await interaction.followUp({ 
+      content: `❌ ${user.username} はホワイトリストに登録されていません`, 
+      ephemeral: true 
+    });
+    return;
+  }
+
+  config.excludeUsers.splice(index, 1);
+  saveConfig(config);
+
+  await interaction.followUp({ 
+    content: `✅ ${user.username} をホワイトリストから削除しました\n（非アクティブユーザー対象に含まれるようになります）`, 
+    ephemeral: true 
+  });
+  
+  logMessage(`User ${user.username} (${user.id}) removed from whitelist by admin`);
+}
+
+// ホワイトリストを表示
+async function handleWhitelistList(interaction: ChatInputCommandInteraction, config: any): Promise<void> {
+  if (config.excludeUsers.length === 0) {
+    await interaction.followUp({ 
+      content: '📋 ホワイトリストは空です\n現在、除外されているユーザーはいません', 
+      ephemeral: true 
+    });
+    return;
+  }
+
+  if (!interaction.guild) {
+    await interaction.followUp({ content: '❌ このコマンドはサーバー内でのみ実行可能です', ephemeral: true });
+    return;
+  }
+
+  const embed = new EmbedBuilder()
+    .setTitle('📋 ホワイトリスト一覧')
+    .setDescription('非アクティブユーザー対象から除外されているユーザー')
+    .setColor(Colors.Blue)
+    .setTimestamp();
+
+  const userList: string[] = [];
+  
+  for (const userId of config.excludeUsers) {
+    try {
+      const member = await interaction.guild.members.fetch(userId);
+      userList.push(`• ${member.user.username}#${member.user.discriminator} (ID: ${userId})`);
+    } catch (error) {
+      // メンバーが見つからない場合
+      userList.push(`• 不明なユーザー (ID: ${userId}) - サーバーから退出済み`);
+    }
+  }
+
+  // 長すぎる場合は分割
+  const maxLength = 1024;
+  let description = userList.join('\n');
+  
+  if (description.length > maxLength) {
+    description = description.substring(0, maxLength - 20) + '\n...(他省略)';
+  }
+
+  embed.addFields({
+    name: `登録ユーザー数: ${config.excludeUsers.length}名`,
+    value: description,
+    inline: false
+  });
+
+  await interaction.followUp({ embeds: [embed], ephemeral: true });
 } 

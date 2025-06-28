@@ -19,7 +19,8 @@ import {
   handleCheckInactive,
   handleSetConfig,
   handleMonitoringSettings,
-  handleResetData
+  handleResetData,
+  handleWhitelist
 } from './bot/commands.js';
 import healthCheckServer from './server.js';
 
@@ -119,6 +120,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
         break;
       case 'reset-data':
         await handleResetData(interaction);
+        break;
+      case 'whitelist':
+        await handleWhitelist(interaction);
         break;
       default:
         await interaction.reply({ content: '❌ 未知のコマンドです', ephemeral: true });
