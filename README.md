@@ -77,7 +77,54 @@
 
 ---
 
-## 🚀 Koyebでのデプロイ手順
+## 🚀 **Renderデプロイ手順（推奨）**
+
+### **1. Renderアカウント作成**
+```bash
+1. https://render.com/ にアクセス
+2. "Get Started for Free" をクリック
+3. GitHubアカウントで連携
+4. 無料プランで登録完了
+```
+
+### **2. GitHubリポジトリ連携**
+```bash
+1. "New +" → "Web Service"
+2. GitHubリポジトリを選択
+3. "Connect" をクリック
+```
+
+### **3. 環境変数設定**
+```bash
+Environment Variables:
+- DISCORD_TOKEN: [あなたのDiscord Bot Token]
+- DISCORD_CLIENT_ID: [あなたのClient ID]
+- GUILD_ID: [対象サーバーのID]
+- NOTIFICATION_CHANNEL_ID: [通知チャンネルID]
+- INACTIVE_DAYS_THRESHOLD: 30
+- NOTIFICATION_TIME: 20:00
+- NODE_ENV: production
+```
+
+### **4. 自動デプロイ設定**
+```bash
+✅ Auto-Deploy: Yes
+✅ Build Command: npm ci && npm run build
+✅ Start Command: npm start
+✅ Health Check Path: /health
+```
+
+### **5. Renderの利点**
+| 項目 | Render | Koyeb |
+|------|--------|-------|
+| **無料枠** | ✅ 750時間/月 | ⚠️ 制限あり |
+| **24時間稼働** | ✅ スリープなし | ❌ Scale to Zero |
+| **月額コスト** | $0 | $2.68/月 |
+| **設定の簡単さ** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+
+---
+
+## 🚀 Koyebでのデプロイ手順（旧版）
 
 ### Step 1: GitHubリポジトリの準備
 
@@ -258,4 +305,63 @@ MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してくださ�
 
 ## 📞 **サポート**
 
-問題が発生した場合は、GitHubのIssuesでお知らせください。 
+問題が発生した場合は、GitHubのIssuesでお知らせください。
+
+## 🚀 **デプロイメント状況**
+
+### **推奨設定（Render）**
+- **ホスティング**: Render (フリープラン)
+- **稼働時間**: 750時間/月（24時間稼働対応）
+- **スリープなし**: 継続稼働保証
+- **月額コスト**: $0
+
+### **旧設定（Koyeb）**
+- **ホスティング**: Koyeb (Starterプラン)
+- **監視**: UptimeRobot対応済み
+- **キープアライブ**: 3分間隔 + UptimeRobot 5分間隔
+
+### **⚠️ Koyebフリープランの制限**
+2025年3月のアップデートにより、フリープランでは以下の制限があります：
+- **60分非アクティブでスケールダウン**
+- **実際は1-2分で終了する場合もある**
+- **UptimeRobotは正常動作中**
+
+### **📋 推奨解決策**
+
+#### **🎯 最優先: Starterプランアップグレード**
+```bash
+# 月額: $0 + 使用量課金
+# メリット: Scale to Zero無効化、60分制限撤廃
+```
+
+#### **🔧 UptimeRobot設定**
+```
+Monitor Type: HTTP(s)
+URL: https://damp-jobie-takumin6240-f8b67c9e.koyeb.app/health
+Interval: 5 minutes
+Alert When: Down
+```
+
+#### **🔄 代替ホスティング**
+| サービス | 無料枠 | 24時間稼働 | 推奨度 |
+|---------|-------|-----------|--------|
+| **Render** | ✅ 750時間/月 | ✅ スリープなし | ⭐⭐⭐⭐⭐ |
+| **Fly.io** | ✅ 使用量制限内 | ✅ 継続稼働 | ⭐⭐⭐⭐⭐ |
+| **Railway** | ✅ $5クレジット | ❌ クレジット切れで停止 | ⭐⭐⭐ |
+
+## 🤖 **機能**
+
+### **ヘルスチェック**
+- **エンドポイント**: `/health`
+- **UptimeRobot対応**: ✅
+- **メモリ使用量監視**: ✅
+- **プロセス情報表示**: ✅
+
+### **ログ機能**
+- **UptimeRobotアクセス検出**: ✅
+- **詳細なシャットダウンログ**: ✅
+- **メモリ使用量追跡**: ✅
+
+## 🔧 **技術仕様**
+
+// ... existing code ... 

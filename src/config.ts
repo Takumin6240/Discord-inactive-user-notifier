@@ -1,5 +1,9 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import dotenv from 'dotenv';
+import { logMessage } from './utils/logger.js';
+
+dotenv.config();
 
 // 開発環境でのみdotenvを読み込み
 if (process.env.NODE_ENV !== 'production') {
@@ -9,6 +13,10 @@ if (process.env.NODE_ENV !== 'production') {
     // dotenvがない場合は無視
   }
 }
+
+// Render specific configurations
+const isRender = process.env.RENDER === 'true' || process.env.RENDER_SERVICE_ID;
+const isKoyeb = process.env.KOYEB === 'true' || process.env.KOYEB_APP_ID;
 
 // 環境変数
 export const DISCORD_TOKEN = process.env.DISCORD_TOKEN || '';
@@ -24,7 +32,7 @@ export const LOG_FILE = join(DATA_DIR, 'bot.log');
 
 // デフォルト設定
 export const DEFAULT_CONFIG = {
-  inactiveDays: 3,
+  inactiveDays: 30,
   enableAutoNotify: true,
   notifyTime: "0 20 * * *", // 毎日20時（日本時間）
   notifyChannel: null,
@@ -42,8 +50,19 @@ export const DEFAULT_CONFIG = {
   }
 };
 
-// 設定の型定義
+// 設定の型定義（新旧両対応）
 export interface Config {
+  // 新形式（Render用）
+  discordToken: string;
+  discordClientId: string;
+  guildId: string;
+  notificationChannelId: string;
+  inactiveDaysThreshold: number;
+  notificationTime: string;
+  port: number;
+  platform: 'render' | 'koyeb' | 'local';
+  
+  // 旧形式（既存コード互換用）
   inactiveDays: number;
   enableAutoNotify: boolean;
   notifyTime: string;
@@ -79,28 +98,103 @@ export function ensureDataDirectory(): void {
   }
 }
 
-// 設定ファイルを読み込み
+// 設定ファイルを読み込み（新旧両対応）
 export function loadConfig(): Config {
   ensureDataDirectory();
   
+  // 環境変数から基本設定を読み込み
+  const envConfig = {
+    discordToken: process.env.DISCORD_TOKEN || '',
+    discordClientId: process.env.DISCORD_CLIENT_ID || '',
+    guildId: process.env.GUILD_ID || '',
+    notificationChannelId: process.env.NOTIFICATION_CHANNEL_ID || '',
+    inactiveDaysThreshold: parseInt(process.env.INACTIVE_DAYS_THRESHOLD || '30'),
+    notificationTime: process.env.NOTIFICATION_TIME || '20:00',
+    port: parseInt(process.env.PORT || '8000'),
+    platform: isRender ? 'render' : isKoyeb ? 'koyeb' : 'local' as const
+  };
+
+  // ファイルから既存設定を読み込み
+  let fileConfig = DEFAULT_CONFIG;
   if (existsSync(CONFIG_FILE)) {
     try {
       const configData = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
-      return { ...DEFAULT_CONFIG, ...configData };
+      fileConfig = { ...DEFAULT_CONFIG, ...configData };
     } catch (error) {
       console.warn('設定ファイルの読み込みに失敗しました。デフォルト設定を使用します:', error);
     }
   }
+
+  // 新旧形式を統合
+  const config: Config = {
+    // 新形式
+    discordToken: envConfig.discordToken,
+    discordClientId: envConfig.discordClientId,
+    guildId: envConfig.guildId,
+    notificationChannelId: envConfig.notificationChannelId,
+    inactiveDaysThreshold: envConfig.inactiveDaysThreshold,
+    notificationTime: envConfig.notificationTime,
+    port: envConfig.port,
+    platform: envConfig.platform as 'render' | 'koyeb' | 'local',
+    
+    // 旧形式（既存コード互換用）
+    inactiveDays: fileConfig.inactiveDays,
+    enableAutoNotify: fileConfig.enableAutoNotify,
+    notifyTime: fileConfig.notifyTime,
+    notifyChannel: fileConfig.notifyChannel,
+    logChannel: fileConfig.logChannel,
+    excludeRoles: fileConfig.excludeRoles,
+    excludeUsers: fileConfig.excludeUsers,
+    maxUsersPerMessage: fileConfig.maxUsersPerMessage,
+    monitoringOptions: fileConfig.monitoringOptions,
+    koyebConfig: fileConfig.koyebConfig
+  };
+
+  // 環境変数が設定されている場合は上書き
+  if (envConfig.notificationChannelId) {
+    config.notifyChannel = envConfig.notificationChannelId;
+  }
+  if (envConfig.inactiveDaysThreshold) {
+    config.inactiveDays = envConfig.inactiveDaysThreshold;
+  }
+
+  // 必須環境変数の検証
+  const requiredVars = ['discordToken', 'discordClientId', 'guildId'];
+  const missingVars = requiredVars.filter(key => !config[key as keyof Config]);
   
-  saveConfig(DEFAULT_CONFIG);
-  return DEFAULT_CONFIG;
+  if (missingVars.length > 0) {
+    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  }
+
+  logMessage(`🌐 Platform detected: ${config.platform.toUpperCase()}`);
+  logMessage(`📊 Configuration loaded successfully`);
+
+  // 初回設定時はファイルに保存
+  if (!existsSync(CONFIG_FILE)) {
+    saveConfig(config);
+  }
+
+  return config;
 }
 
 // 設定ファイルを保存
 export function saveConfig(config: Config): void {
   ensureDataDirectory();
   try {
-    writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
+    // 旧形式のプロパティのみをファイルに保存
+    const fileConfig = {
+      inactiveDays: config.inactiveDays,
+      enableAutoNotify: config.enableAutoNotify,
+      notifyTime: config.notifyTime,
+      notifyChannel: config.notifyChannel,
+      logChannel: config.logChannel,
+      excludeRoles: config.excludeRoles,
+      excludeUsers: config.excludeUsers,
+      maxUsersPerMessage: config.maxUsersPerMessage,
+      monitoringOptions: config.monitoringOptions,
+      koyebConfig: config.koyebConfig
+    };
+    writeFileSync(CONFIG_FILE, JSON.stringify(fileConfig, null, 2), 'utf-8');
   } catch (error) {
     console.error('設定ファイルの保存に失敗しました:', error);
   }

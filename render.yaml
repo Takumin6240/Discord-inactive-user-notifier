@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: discord-inactive-user-notifier
+    env: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8000
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: GUILD_ID
+        sync: false
+      - key: NOTIFICATION_CHANNEL_ID
+        sync: false
+      - key: INACTIVE_DAYS_THRESHOLD
+        value: "30"
+      - key: NOTIFICATION_TIME
+        value: "20:00"
+    autoDeploy: true
+    region: oregon  # 推奨リージョン（高速・安定）
+    disk:
+      name: discord-bot-data
+      mountPath: /app/data
+      sizeGB: 1 
